@@ -61,11 +61,9 @@ export function ConsolePage() {
    */
   const apiKey = LOCAL_RELAY_SERVER_URL
     ? ''
-    : localStorage.getItem('tmp::voice_api_key') ||
-      prompt('OpenAI API Key') ||
-      '';
+    : process.env.REACT_APP_OPENAI_API_KEY || prompt('OpenAI API Key') || '';
   if (apiKey !== '') {
-    localStorage.setItem('tmp::voice_api_key', apiKey);
+    localStorage.setItem('tmp::voice_api_key', apiKey); // Optional: Store in localStorage if needed
   }
 
   /**
@@ -380,6 +378,8 @@ export function ConsolePage() {
     client.updateSession({ instructions: instructions });
     // Set transcription, otherwise we don't get user transcriptions back
     client.updateSession({ input_audio_transcription: { model: 'whisper-1' } });
+    client.updateSession({ voice: 'shimmer' });
+
 
     // Add tools
     client.addTool(
@@ -411,6 +411,56 @@ export function ConsolePage() {
         return { ok: true };
       }
     );
+
+    // New tool to change background color
+    client.addTool(
+      {
+        name: 'change_background_color',
+        description: 'Changes the background color of the website.',
+        parameters: {
+          type: 'object',
+          properties: {
+            color: {
+              type: 'string',
+              description: 'The color to set as the background (e.g., "#ff0000" or "red").',
+            },
+          },
+          required: ['color'],
+        },
+      },
+      async ({ color }: { color: string }) => {
+        document.body.style.backgroundColor = color; // Change the background color
+        return { ok: true };
+      }
+    );
+
+    // {{ edit_2 }} New tool to change background to a gradient
+    client.addTool(
+      {
+        name: 'change_background_gradient',
+        description: 'Changes the background of the website to a gradient.',
+        parameters: {
+          type: 'object',
+          properties: {
+            color1: {
+              type: 'string',
+              description: 'The first color of the gradient (e.g., "#ff0000" or "red").',
+            },
+            color2: {
+              type: 'string',
+              description: 'The second color of the gradient (e.g., "#0000ff" or "blue").',
+            },
+          },
+          required: ['color1', 'color2'],
+        },
+      },
+      async ({ color1, color2 }: { color1: string; color2: string }) => {
+        document.body.style.background = `linear-gradient(${color1}, ${color2})`; // Change the background to a gradient
+        return { ok: true };
+      }
+    );
+    // {{ edit_2 }}
+
     client.addTool(
       {
         name: 'get_weather',
